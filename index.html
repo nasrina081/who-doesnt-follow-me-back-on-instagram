@@ -156,9 +156,9 @@
     function displayResults(list) {
       const resultsDiv = document.getElementById('results');
       if (list.length === 0) {
-        resultsDiv.innerHTML = "<h3>🎉 Everyone you follow follows you back!</h3>";
+        resultsDiv.innerHTML = "<h3>Everyone you follow follows you back!</h3>";
       } else {
-        resultsDiv.innerHTML = `<h3>🚫 People who don’t follow you back (${list.length}):</h3><ul>` +
+        resultsDiv.innerHTML = `<h3>People who don’t follow you back (${list.length}):</h3><ul>` +
           list.map(user => `<li>${user}</li>`).join('') + '</ul>';
       }
     }
