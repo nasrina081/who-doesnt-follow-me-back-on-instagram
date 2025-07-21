@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram Non-Followers Checker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+    }
+    h1 {
+      color: #e91e63;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    input[type="file"] {
+      margin: 10px 0;
+      padding: 10px;
+      border: 2px dashed #e91e63;
+      border-radius: 8px;
+      background: #fce4ec;
+      cursor: pointer;
+      width: 100%;
+    }
+    button {
+      background: #e91e63;
+      color: #fff;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #c2185b;
+    }
+    #results {
+      margin-top: 25px;
+      text-align: left;
+      background: #fce4ec;
+      border-radius: 10px;
+      padding: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    #results h3 {
+      color: #e91e63;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #fff;
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Who doesn't follow me back?</h1>
+    <p><b>How to Use:</b></p>
+    <p><b>1. Go to your Instagram profile and click the three bars on the top right</b></p>
+    <p><b>2. Go to Accounts Center</b></p>
+    <p><b>3. Press Your information and permissions</b></p>
+    <p><b>4. Press download your information but only select 'some of your info'</b></p>
+    <p><b>5. Only select followers and following, then download to device, and wait</b></p>
+    <p><b>6. Once the file is ready in your email, download it and then look through the folder for the following and followers html files and upload them here</b></p>
+    <p><b>Select your followers file:</b></p>
+    <input type="file" id="followersFile">
+    <p><b>Select your following file:</b></p>
+    <input type="file" id="followingFile">
+    <button onclick="compareLists()">Check Who Doesn’t Follow Back</button>
+    <div id="results"></div>
+  </div>
+  <script>
+    let followers = new Set();
+    let following = new Set();
+
+    function parseFile(file, isFollowers, callback) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        let content = event.target.result;
+        if (file.name.endsWith('.json')) {
+          let data = JSON.parse(content);
+          let items = Object.values(data)[0];
+          items.forEach(entry => {
+            let name = entry.string_list_data[0].value;
+            if (isFollowers) {
+              followers.add(name);
+            } else {
+              following.add(name);
+            }
+          });
+        } else if (file.name.endsWith('.html')) {
+          let parser = new DOMParser();
+          let doc = parser.parseFromString(content, "text/html");
+          let links = doc.querySelectorAll('a');
+          links.forEach(link => {
+            if (link.textContent.trim()) {
+              if (isFollowers) {
+                followers.add(link.textContent.trim());
+              } else {
+                following.add(link.textContent.trim());
+              }
+            }
+          });
+        }
+        callback();
+      };
+      reader.readAsText(file);
+    }
+
+    function compareLists() {
+      followers.clear();
+      following.clear();
+      const followersFile = document.getElementById('followersFile').files[0];
+      const followingFile = document.getElementById('followingFile').files[0];
+      if (!followersFile || !followingFile) {
+        alert("Please select both files.");
+        return;
+      }
+      parseFile(followersFile, true, () => {
+        parseFile(followingFile, false, () => {
+          let notFollowingBack = Array.from(following).filter(user => !followers.has(user));
+          displayResults(notFollowingBack);
+        });
+      });
+    }
+
+    function displayResults(list) {
+      const resultsDiv = document.getElementById('results');
+      if (list.length === 0) {
+        resultsDiv.innerHTML = "<h3>🎉 Everyone you follow follows you back!</h3>";
+      } else {
+        resultsDiv.innerHTML = `<h3>🚫 People who don’t follow you back (${list.length}):</h3><ul>` +
+          list.map(user => `<li>${user}</li>`).join('') + '</ul>';
+      }
+    }
+  </script>
+</body>
+</html>
